@@ -3,53 +3,39 @@
 
 #include "../include/lib_func.h"
 
-void qsort_parts(item* begin, item* end)
+static void swap(item* a, item* b)
 {
-	if (end - begin < 1) return;
+	item t = *a;
+	*a = *b;
+	*b = t;
+}
 
-	bool beginflag = 0, endflag = 0;
-	item  *keepend = (end-1);
-	item* keepbegin = begin;
-	item  *pivot = begin;
+static item* searchFront(int key, item* begin, const item* end)
+{
+	while (begin->key <= key && begin < end)begin++;
+	return begin;
+}
 
+static item* searchRear(int key, const item* begin, item* end)
+{
+	while (end->key >= key && end > begin)end--;
+	return  end;
+}
 
-	while (1) {
-		if (!beginflag) {
-			begin++;
-			if (begin->key > pivot->key) {
-				beginflag = 1;
-			}
-		}
-		if (!endflag) {
-			end--;
-			if (end->key < pivot->key) {
-				endflag = 1;
-			}
-		}
-		if (begin > end) {
-			item a = *pivot;
-			*pivot = *end;
-			*end = a;
+item* partition(item* begin, const item* end)
+{
+	int key = begin->key;
+	item* head = searchFront(key, begin + 1, end);
+	item* tail = searchRear(key, begin, begin + (end - begin) - 1);
 
-			if (end - keepbegin > 1)
-				qsort_parts(keepbegin, end);
-
-			if ((end+1) - (keepbegin+1) > 1)
-				qsort_parts(end + 1, keepend+1);
-
-			break;
-		}
-		else {
-			if (beginflag && endflag) {
-				item a = *begin;
-				*begin = *end;
-				*end = a;
-				beginflag = 0;
-				endflag = 0;
-			}
-
-		}
+	while (head < tail) {
+		swap(head, tail);
+		searchFront(key, head+1, end);
+		searchRear(key, begin, tail - 1);
 	}
+
+	swap(tail,begin);
+	return tail;
 }
 
 // クイックソート(引数が不適切であればfalseを返す)
@@ -59,59 +45,11 @@ bool quick_sort(item* begin, const item* end)
 	if (begin == NULL)return false;
 	if (end == NULL)return false;
 	if (end < begin)return false;
+	if (end - begin <= 1) return true;
 
-	/*item* n, * m;
-
-
-	n = begin;
-	m = begin + (end - begin);*/
-
-
-
-	//qsort_parts(n, m);
-	bool beginflag = 0, endflag = 0;
-	item* keepend = (begin + (end - begin) - 1);
-	item* keepbegin = begin;
-	item* pivot = begin;
-
-
-	while (1) {
-		if (!beginflag) {
-			begin++;
-			if (begin->key > pivot->key) {
-				beginflag = 1;
-			}
-		}
-		if (!endflag) {
-			end--;
-			if (end->key < pivot->key) {
-				endflag = 1;
-			}
-		}
-		if (begin > end) {
-			item a = *pivot;
-			*pivot = *end;
-			*(begin + (end - begin)) = a;
-
-			if (end - keepbegin > 1)
-				quick_sort(keepbegin, begin + (end - begin));
-
-			if ((end + 1) - (keepbegin + 1) > 1)
-				quick_sort((begin + (end - begin)) + 1, keepend + 1);
-
-			break;
-		}
-		else {
-			if (beginflag && endflag) {
-				item a = *begin;
-				*begin = *end;
-				*(begin + (end - begin)) = a;
-				beginflag = 0;
-				endflag = 0;
-			}
-
-		}
-	}
+	item* pivot = partition(begin, end);
+	quick_sort(begin, pivot);
+	quick_sort(pivot + 1, end);
 
 	return true;
 }
